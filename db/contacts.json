@@ -60,12 +60,6 @@
     "phone": "9929143792"
   },
   {
-    "id": "zE21Mu33wawqidQQOzM2J",
-    "name": "Jack White",
-    "email": "jack.white@gmail.com",
-    "phone": "+77-56(89)-00-90"
-  },
-  {
     "id": "4UuR2Oj0IVAmmqkOZDkGv",
     "name": "Jack Grey",
     "email": "jack.white@gmail.com",
@@ -82,11 +76,5 @@
     "name": "Jack Greysonuk",
     "email": "jack.greysonuk@gmail.ua",
     "phone": "1234567890"
-  },
-  {
-    "id": "qTQfkG252xZ4jeCg3CpZY",
-    "name": "Jack Brown",
-    "email": "jack.brown@gmail.com",
-    "phone": "1111111111"
   }
 ]
