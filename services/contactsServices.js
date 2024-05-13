@@ -32,9 +32,14 @@ export async function updateContact(contactId, data) {
   return contact;
 }
 
-export async function updateContactStatus(contactId, data) {
-  const contact = await Contact.findByIdAndUpdate(contactId, data, {
-    new: true,
-  });
-  return contact;
-}
+export const updateContactStatus = async (id, data) => {
+  const { favorite } = data;
+  if (favorite === undefined) {
+    throw HttpError(400, "Missing field favorite");
+  }
+  return await Contact.findByIdAndUpdate(
+    id,
+    { favorite },
+    { new: true, runValidators: true }
+  );
+};
