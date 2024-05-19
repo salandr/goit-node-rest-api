@@ -10,6 +10,7 @@ export const createContactSchema = Joi.object({
     .regex(/^[0-9]{10}$/)
     .message("Phone number must have 10 digits.")
     .required(),
+  favorite: Joi.bool(),
 });
 
 export const updateContactSchema = Joi.object({
@@ -21,4 +22,9 @@ export const updateContactSchema = Joi.object({
   phone: Joi.string()
     .regex(/^[0-9]{10}$/)
     .message("Phone number must have 10 digits."),
+  favorite: Joi.bool(),
+});
+
+export const updateStatusSchema = Joi.object({
+  favorite: Joi.boolean().required(),
 });
