@@ -11,7 +11,8 @@ const { isValidObjectId } = mongoose;
 
 export const getAllContacts = async (req, res, next) => {
   try {
-    const result = await contactsService.listContacts();
+    const { _id: owner } = req.user;
+    const result = await contactsService.listContacts(owner);
     res.json(result);
   } catch (error) {
     next(error);
@@ -56,7 +57,8 @@ export const createContact = async (req, res, next) => {
     const { error } = createContactSchema.validate(req.body);
     if (error) throw HttpError(400, error.message);
 
-    const result = await contactsService.addContact(req.body);
+    const { _id: owner } = req.user;
+    const result = await contactsService.addContact(req.body, owner);
 
     res.status(201).json(result);
   } catch (error) {
