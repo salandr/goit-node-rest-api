@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 
-const contactSchema = new mongoose.Schema(
+const { Schema } = mongoose;
+
+const contactSchema = new Schema(
   {
     name: {
       type: String,
@@ -15,6 +17,11 @@ const contactSchema = new mongoose.Schema(
     favorite: {
       type: Boolean,
       default: false,
+    },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "user",
+      required: true,
     },
   },
   {

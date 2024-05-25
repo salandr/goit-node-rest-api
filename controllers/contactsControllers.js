@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Contact from "../models/Contact.js";
 import HttpError from "../helpers/HttpError.js";
 import {
   createContactSchema,
@@ -11,7 +12,8 @@ const { isValidObjectId } = mongoose;
 
 export const getAllContacts = async (req, res, next) => {
   try {
-    const result = await contactsService.listContacts();
+    const { _id: owner } = req.user;
+    const result = await contactsService.listContacts(owner);
     res.json(result);
   } catch (error) {
     next(error);
@@ -25,7 +27,7 @@ export const getOneContact = async (req, res, next) => {
       throw HttpError(400, "Invalid ID format");
     }
     const result = await contactsService.getContactById(id);
-    if (!result) {
+    if (!result || result.owner.toString() !== req.user._id.toString()) {
       throw HttpError(404);
     }
     res.json(result);
@@ -37,11 +39,10 @@ export const getOneContact = async (req, res, next) => {
 export const deleteContact = async (req, res, next) => {
   try {
     const { id } = req.params;
-
     if (!isValidObjectId(id)) {
       throw HttpError(400, "Invalid ID format");
     }
-    const result = await contactsService.removeContact(id);
+    const result = await contactsService.removeContact(id, req.user._id);
     if (!result) {
       throw HttpError(404);
     }
@@ -56,8 +57,8 @@ export const createContact = async (req, res, next) => {
     const { error } = createContactSchema.validate(req.body);
     if (error) throw HttpError(400, error.message);
 
-    const result = await contactsService.addContact(req.body);
-
+    const { _id: owner } = req.user;
+    const result = await contactsService.addContact(req.body, owner);
     res.status(201).json(result);
   } catch (error) {
     next(error);
@@ -67,7 +68,6 @@ export const createContact = async (req, res, next) => {
 export const updateContact = async (req, res, next) => {
   try {
     const { id } = req.params;
-
     if (!isValidObjectId(id)) {
       throw HttpError(400, "Invalid ID format");
     }
@@ -80,8 +80,11 @@ export const updateContact = async (req, res, next) => {
     }
 
     const { favorite, ...updateBody } = req.body;
-
-    const result = await contactsService.updateContact(id, updateBody);
+    const result = await contactsService.updateContact(
+      id,
+      updateBody,
+      req.user._id
+    );
     if (!result) {
       throw HttpError(404);
     }
@@ -101,7 +104,11 @@ export const updateStatus = async (req, res, next) => {
     const { error } = updateStatusSchema.validate(req.body);
     if (error) throw HttpError(400, error.message);
 
-    const result = await contactsService.updateContactStatus(id, req.body);
+    const result = await contactsService.updateContactStatus(
+      id,
+      req.body,
+      req.user._id
+    );
 
     if (!result) {
       throw HttpError(404, "Contact not found");

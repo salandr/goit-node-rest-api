@@ -1,45 +1,29 @@
-import fs from "fs/promises";
-import path from "path";
-import { nanoid } from "nanoid";
 import Contact from "../models/Contact.js";
 
-const contactsPath = path.resolve("db", "contacts.json");
+export const listContacts = async (owner) => {
+  return await Contact.find({ owner });
+};
 
-export async function listContacts() {
-  const contacts = await Contact.find();
-  return contacts;
-}
+export const getContactById = async (id) => {
+  return await Contact.findById(id);
+};
 
-export async function getContactById(contactId) {
-  const contact = await Contact.findById(contactId);
-  return contact;
-}
+export const removeContact = async (id, owner) => {
+  return await Contact.findOneAndRemove({ _id: id, owner });
+};
 
-export async function removeContact(contactId) {
-  const contact = await Contact.findByIdAndDelete(contactId);
-  return contact;
-}
+export const addContact = async (body, owner) => {
+  return await Contact.create({ ...body, owner });
+};
 
-export async function addContact(data) {
-  const contact = await Contact.create(data);
-  return contact;
-}
-
-export async function updateContact(contactId, data) {
-  const contact = await Contact.findByIdAndUpdate(contactId, data, {
+export const updateContact = async (id, body, owner) => {
+  return await Contact.findOneAndUpdate({ _id: id, owner }, body, {
     new: true,
   });
-  return contact;
-}
+};
 
-export const updateContactStatus = async (id, data) => {
-  const { favorite } = data;
-  if (favorite === undefined) {
-    throw HttpError(400, "Missing field favorite");
-  }
-  return await Contact.findByIdAndUpdate(
-    id,
-    { favorite },
-    { new: true, runValidators: true }
-  );
+export const updateContactStatus = async (id, body, owner) => {
+  return await Contact.findOneAndUpdate({ _id: id, owner }, body, {
+    new: true,
+  });
 };

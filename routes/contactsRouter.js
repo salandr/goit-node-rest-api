@@ -1,4 +1,5 @@
 import express from "express";
+import auth from "../middleware/auth.js";
 import {
   getAllContacts,
   getOneContact,
@@ -8,18 +9,15 @@ import {
   updateStatus,
 } from "../controllers/contactsControllers.js";
 
-const contactsRouter = express.Router();
+const router = express.Router();
 
-contactsRouter.get("/", getAllContacts);
+router.use(auth); // Захист усіх маршрутів аутентифікацією
 
-contactsRouter.get("/:id", getOneContact);
+router.get("/", getAllContacts);
+router.get("/:id", getOneContact);
+router.post("/", createContact);
+router.delete("/:id", deleteContact);
+router.put("/:id", updateContact);
+router.patch("/:id/favorite", updateStatus);
 
-contactsRouter.delete("/:id", deleteContact);
-
-contactsRouter.post("/", createContact);
-
-contactsRouter.put("/:id", updateContact);
-
-contactsRouter.patch("/:id/favorite", updateStatus);
-
-export default contactsRouter;
+export default router;
