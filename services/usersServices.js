@@ -15,3 +15,7 @@ export const updateUserToken = async (userId, token) => {
 export const findUserById = async (userId) => {
   return await User.findById(userId);
 };
+
+export const updateUserAvatar = async (userId, avatarURL) => {
+  return User.findByIdAndUpdate(userId, { avatarURL }, { new: true });
+};

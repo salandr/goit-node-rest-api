@@ -1,11 +1,15 @@
+import jimp from "jimp";
+import fs from "fs/promises";
+import path from "path";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
+import gravatar from "gravatar";
 import { registerSchema, loginSchema } from "../schemas/authSchemas.js";
 import HttpError from "../helpers/HttpError.js";
 import * as userService from "../services/usersServices.js";
 
 const { SECRET_KEY } = process.env;
+const avatarsDir = path.join(process.cwd(), "public", "avatars");
 
 export const register = async (req, res, next) => {
   try {
@@ -20,15 +24,19 @@ export const register = async (req, res, next) => {
     }
 
     const hashPassword = await bcrypt.hash(password, 10);
+    const avatarURL = gravatar.url(email, { s: "250", d: "identicon" }, true);
+
     const user = await userService.createUser({
       ...req.body,
       password: hashPassword,
+      avatarURL,
     });
 
     res.status(201).json({
       user: {
         email: user.email,
         subscription: user.subscription,
+        avatarURL: user.avatarURL,
       },
     });
   } catch (error) {
@@ -90,6 +98,31 @@ export const getCurrentUser = async (req, res, next) => {
       email,
       subscription,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateAvatar = async (req, res, next) => {
+  try {
+    console.log(req.file);
+    const { path: tempUpload, originalname } = req.file;
+    const { _id } = req.user;
+    const filename = `${_id}_${originalname}`;
+    const resultUpload = path.join(avatarsDir, filename);
+
+    await jimp
+      .read(tempUpload)
+      .then((avatar) => avatar.resize(250, 250).write(resultUpload))
+      .catch((err) => {
+        throw HttpError(500, "Failed to process the image");
+      });
+
+    await fs.unlink(tempUpload);
+    const avatarURL = `/avatars/${filename}`;
+    await userService.updateUserAvatar(_id, avatarURL);
+
+    res.json({ avatarURL });
   } catch (error) {
     next(error);
   }
