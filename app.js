@@ -3,6 +3,7 @@ import morgan from "morgan";
 import cors from "cors";
 import mongoose from "mongoose";
 import "dotenv/config";
+import path from "path";
 
 import contactsRouter from "./routes/contactsRouter.js";
 import authRouter from "./routes/authRouter.js";
@@ -14,6 +15,13 @@ const app = express();
 app.use(morgan("tiny"));
 app.use(cors());
 app.use(express.json());
+
+const publicDir = path.join(process.cwd(), "public");
+app.use(express.static(publicDir));
+
+const __dirname = path.dirname(new URL(import.meta.url).pathname); // Отримати поточний каталог
+
+app.use("/avatars", express.static(path.join(__dirname, "public/avatars")));
 
 app.use("/api/users", authRouter);
 
