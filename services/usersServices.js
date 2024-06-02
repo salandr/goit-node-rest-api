@@ -17,5 +17,17 @@ export const findUserById = async (userId) => {
 };
 
 export const updateUserAvatar = async (userId, avatarURL) => {
-  return User.findByIdAndUpdate(userId, { avatarURL }, { new: true });
+  return await User.findByIdAndUpdate(userId, { avatarURL }, { new: true });
+};
+
+export const findUserByVerificationToken = async (token) => {
+  return await User.findOne({ verificationToken: token });
+};
+
+export const updateUserVerificationStatus = async (userId) => {
+  return await User.findByIdAndUpdate(
+    userId,
+    { verificationToken: null, verify: true },
+    { new: true }
+  );
 };

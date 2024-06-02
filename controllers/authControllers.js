@@ -4,9 +4,11 @@ import path from "path";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import gravatar from "gravatar";
+import { v4 as uuidv4 } from "uuid";
 import { registerSchema, loginSchema } from "../schemas/authSchemas.js";
 import HttpError from "../helpers/HttpError.js";
 import * as userService from "../services/usersServices.js";
+import sendVerificationEmail from "../helpers/sendVerificationEmail.js";
 
 const { SECRET_KEY } = process.env;
 const avatarsDir = path.join(process.cwd(), "public", "avatars");
@@ -25,12 +27,16 @@ export const register = async (req, res, next) => {
 
     const hashPassword = await bcrypt.hash(password, 10);
     const avatarURL = gravatar.url(email, { s: "250", d: "identicon" }, true);
+    const verificationToken = uuidv4();
 
     const user = await userService.createUser({
       ...req.body,
       password: hashPassword,
       avatarURL,
+      verificationToken,
     });
+
+    await sendVerificationEmail(user.email, verificationToken);
 
     res.status(201).json({
       user: {
@@ -44,6 +50,55 @@ export const register = async (req, res, next) => {
   }
 };
 
+export const verifyEmail = async (req, res, next) => {
+  try {
+    const { verificationToken } = req.params;
+    const user = await userService.findUserByVerificationToken(
+      verificationToken
+    );
+
+    if (!user) {
+      throw HttpError(404, "User not found");
+    }
+
+    await userService.updateUserVerificationStatus(user._id);
+
+    res.status(200).json({ message: "Verification successful" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resendVerificationEmail = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      throw HttpError(400, "missing required field email");
+    }
+
+    const user = await userService.findUserByEmail(email);
+
+    if (!user) {
+      throw HttpError(404, "User not found");
+    }
+
+    if (user.verify) {
+      throw HttpError(400, "Verification has already been passed");
+    }
+
+    const verificationToken = uuidv4();
+    user.verificationToken = verificationToken;
+    await user.save();
+
+    await sendVerificationEmail(user.email, verificationToken);
+
+    res.status(200).json({ message: "Verification email sent" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const login = async (req, res, next) => {
   try {
     const { error } = loginSchema.validate(req.body);
@@ -52,8 +107,8 @@ export const login = async (req, res, next) => {
     const { email, password } = req.body;
     const user = await userService.findUserByEmail(email);
 
-    if (!user) {
-      throw HttpError(401, "Email or password is wrong");
+    if (!user || !user.verify) {
+      throw HttpError(401, "Email or password is wrong or email not verified");
     }
 
     const passwordCompare = await bcrypt.compare(password, user.password);
